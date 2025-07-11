@@ -23,13 +23,22 @@ a,
 
 @media (min-width: 1024px) {
   body {
-    display: flex;
-    place-items: center;
+    height: 100%;
+    width: 100%;
   }
 
   #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
   }
+}
+
+.box-btn {
+  background-color: transparent;
+  color: var(--color-heading);
+  border: 1px var(--color-heading) solid;
+  flex-grow: 0;
+  height: fit-content;
 }
