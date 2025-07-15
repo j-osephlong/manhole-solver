@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ManholePresets } from '@/constants';
 import type { ManholeConf } from '@/types';
 
 
@@ -7,12 +8,15 @@ const model = defineModel<ManholeConf>({required: true})
 <template>
     <div class="conf-container">
         <div class="setting">
-            <label>Structure Height</label>
-            <input type="number" v-model="model.heightMeters" placeholder="Meters" step=".25">
+            <label>Diameter</label>
+            <select v-model="model.diameterMeters">
+                <option v-for="preset in ManholePresets" :key="preset.name" :value="preset.diameterMeters">{{ preset.name }}</option>
+            </select>
+            {{ model.diameterMeters }}
         </div>
         <div class="setting">
-            <label>Structure Diameter</label>
-            <input type="number" v-model="model.diameterMeters" placeholder="Meters" step=".5">
+            <label>Structure Height</label>
+            <input type="number" v-model="model.heightMeters" placeholder="Meters" step=".25">
         </div>
         <div class="setting">
             <label>Minimum Pipe Spacing</label>

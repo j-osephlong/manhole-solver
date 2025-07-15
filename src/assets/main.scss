@@ -41,4 +41,9 @@ a,
   border: 1px var(--color-heading) solid;
   flex-grow: 0;
   height: fit-content;
+
+  &:hover {
+    background-color: color-mix(in srgb, var(--color-heading), transparent 90%);
+    cursor: pointer;
+  }
 }

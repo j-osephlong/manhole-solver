@@ -10,5 +10,18 @@ export type PipeConf = {
     xDegrees: number,
     heightMeters: number,
     materialThicknessMeters: number,
+    presetName: string,
     uuid: string,
+    get centerYMeters(): number,
+}
+
+export type PipePreset = {
+    name: string,
+    diameterMeters: number,
+    materialThicknessMeters: number,
+}
+
+export type ManholePreset = {
+    name: string,
+    diameterMeters: number,
 }
