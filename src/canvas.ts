@@ -1,6 +1,6 @@
 import type { CollisionDetection } from "./collision"
 import { MANHOLE_WIDTH_DEGREES } from "./constants"
-import { getManholeVisibleSectionHeightMeters, getPipeCenterElevation, type PipeConf, type System } from "./types"
+import { circumference, getManholeVisibleSectionHeightMeters, getPipeCenterElevation, type PipeConf, type System } from "./types"
 
 const LOG_TAG = "[canvas.ts]" as const;
 export const MANHOLE_CANVAS_PERCENT = 0.8
@@ -63,11 +63,11 @@ export class ManholeCanvas {
     }
 
     metersToPx(metersX: number, system: System) {
-        return (this.manholeWidthPx!/ system.manhole.diameterMeters) * (metersX) 
+        return (this.manholeWidthPx! / circumference(system.manhole.diameterMeters / 2)) * (metersX) 
     }
 
     metersYToPx(metersX: number, system: System) {
-        return (this.manholeWidthPx!/ system.manhole.diameterMeters) * (metersX - system.manholeVisibleSectionBottomElevation) 
+        return (this.manholeWidthPx! / circumference(system.manhole.diameterMeters / 2)) * (metersX - system.manholeVisibleSectionBottomElevation) 
     }
 
     drawManhole(system: System) {
@@ -82,7 +82,7 @@ export class ManholeCanvas {
         // draw x axis
         this.context.fillText('0°', this.manholeTopLeft[0], this.manholeTopLeft[1] - 10 - 7);
         this.context.fillText('360°', this.manholeBottomRight[0], this.manholeTopLeft[1] - 10 - 7);
-        this.context.fillText(`← ${system.manhole.diameterMeters} meters →`, this.manholeTopLeft[0] + this.manholeWidthPx! / 2, this.manholeTopLeft[1] - 10 - 7);
+        this.context.fillText(`← ${circumference(system.manhole.diameterMeters / 2).toFixed(2)} meters →`, this.manholeTopLeft[0] + this.manholeWidthPx! / 2, this.manholeTopLeft[1] - 10 - 7);
         // draw y axis
         const topXAxisText = `${system.manhole.rimElevationMeters.toFixed(2)} meters`
         const bottomXAxisText = `${(system.manholeVisibleSectionBottomElevation).toFixed(2)} meters`
@@ -195,10 +195,10 @@ export class ManholeCanvas {
         // We want either the height or width of the manhole to be 80% of that direction of the canvas
         const manholeHeightMeters = getManholeVisibleSectionHeightMeters(system)
         this.manholeWidthPx = this.canvasElm.width * MANHOLE_CANVAS_PERCENT
-        this.manholeHeightPx = (manholeHeightMeters / system.manhole.diameterMeters) * this.manholeWidthPx
+        this.manholeHeightPx = (manholeHeightMeters / circumference(system.manhole.diameterMeters / 2)) * this.manholeWidthPx
         if (this.manholeHeightPx > this.canvasElm.height * MANHOLE_CANVAS_PERCENT) {
             this.manholeHeightPx = this.canvasElm.height * MANHOLE_CANVAS_PERCENT
-            this.manholeWidthPx = (system.manhole.diameterMeters / manholeHeightMeters) * this.manholeHeightPx
+            this.manholeWidthPx = (circumference(system.manhole.diameterMeters / 2) / manholeHeightMeters) * this.manholeHeightPx
         }
 
         console.debug(LOG_TAG, manholeHeightMeters, this.manholeHeightPx);

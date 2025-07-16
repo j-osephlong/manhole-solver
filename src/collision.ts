@@ -1,7 +1,5 @@
 import { MANHOLE_WIDTH_DEGREES } from "./constants";
-import type { ManholeConf, PipeConf, System } from "./types";
-
-const LOG_TAG = "[collision.ts]" as const;
+import { circumference, type ManholeConf, type PipeConf, type System } from "./types";
 
 /**
  * Use spatial hashing to find collisions rather than check between every pipe
@@ -37,7 +35,7 @@ export class CollisionDetection {
         if (!this.manhole || !this.pipes || this.cellSize === undefined) {
             throw new Error("Not initialized.")
         }
-        const pipeXMeters = this.manhole.diameterMeters / MANHOLE_WIDTH_DEGREES * conf.xDegrees
+        const pipeXMeters = circumference(this.manhole.diameterMeters / 2) / MANHOLE_WIDTH_DEGREES * conf.xDegrees
         const cellX = Math.floor(pipeXMeters / this.cellSize)
         const cellY = Math.floor((conf.invertElevationMeters + conf.radiusMeters) / this.cellSize)
         return `${cellX}:${cellY}`
@@ -79,12 +77,12 @@ export class CollisionDetection {
         if (!this.manhole) {
             throw new Error("Not initialized.")
         }
-        const pipe1XCenterMeters = this.manhole.diameterMeters / MANHOLE_WIDTH_DEGREES * (conf1.xDegrees)
+        const pipe1XCenterMeters = circumference(this.manhole.diameterMeters / 2) / MANHOLE_WIDTH_DEGREES * (conf1.xDegrees)
         const pipe1TotalRadius = conf1.radiusMeters + conf1.materialThicknessMM / 1000
-        const pipe2XCenterMeters = this.manhole.diameterMeters / MANHOLE_WIDTH_DEGREES * (conf2.xDegrees)
+        const pipe2XCenterMeters = circumference(this.manhole.diameterMeters / 2) / MANHOLE_WIDTH_DEGREES * (conf2.xDegrees)
         const pipe2TotalRadius = conf2.radiusMeters + conf2.materialThicknessMM / 1000
         const distance1 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters))** 2 + ((conf2.invertElevationMeters + conf2.radiusMeters) - (conf1.invertElevationMeters + conf1.radiusMeters)) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
-        const distance2 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters - this.manhole.diameterMeters))** 2 + ((conf2.invertElevationMeters + conf2.radiusMeters) - (conf1.invertElevationMeters + conf1.radiusMeters)) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
+        const distance2 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters - circumference(this.manhole.diameterMeters / 2)))** 2 + ((conf2.invertElevationMeters + conf2.radiusMeters) - (conf1.invertElevationMeters + conf1.radiusMeters)) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
 
         return Math.min(distance1, distance2)
     }
@@ -149,7 +147,7 @@ export class CollisionDetection {
         if (!this.manhole || !this.cellSize) {
             throw new Error("Not initialized.")
         }
-        return Math.ceil(this.manhole?.diameterMeters / this.cellSize)
+        return Math.ceil(circumference(this.manhole.diameterMeters / 2) / this.cellSize)
     }
 
     getCollisions() {

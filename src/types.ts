@@ -44,3 +44,7 @@ export function getManholeVisibleSectionBottomMeters(system: System) {
 export function getPipeCenterElevation(pipe: PipeConf) {
     return pipe.invertElevationMeters + pipe.radiusMeters
 }
+
+export function circumference(r: number) {
+    return (2 * Math.PI * r) ** 2
+}
