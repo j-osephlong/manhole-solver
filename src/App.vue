@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, shallowRef, watch } from 'vue';
-import type { ManholeConf, ManholePreset, PipeConf } from './types';
+import { getManholeVisibleSectionBottomMeters, getManholeVisibleSectionHeightMeters, type ManholePreset, type System } from './types';
 import PipeConfItem from './components/PipeConfItem.vue';
 import ManholeConfItem from './components/ManholeConfItem.vue';
 import { ManholeCanvas } from './canvas';
@@ -10,41 +10,42 @@ import { DEFAULT_MANHOLE, ManholePresets, PipePresets } from './constants';
 
 const manholeCanvas = shallowRef<ManholeCanvas>()
 
-const manhole = useStorage<ManholeConf>('manholeConf', {
-    ...DEFAULT_MANHOLE
+const system = useStorage<System>('system', {
+    manhole: {...DEFAULT_MANHOLE},
+    pipes: [],
+    manholeVisibleSectionHeight: 1,
+    manholeVisibleSectionBottomElevation: 0,
 })
-
-const pipes = useStorage<PipeConf[]>('pipes', [])
 
 const minManholePreset = ref<ManholePreset | null>(null)
 
 // add new pipe to system
 function addPipe() {
-    pipes.value.push({
+    system.value.pipes.push({
         presetName: PipePresets[0].name,
-        heightMeters: manhole.value.heightMeters / 2,
+        invertElevationMeters: system.value.manholeVisibleSectionBottomElevation,
         xDegrees: 0, 
         radiusMeters: PipePresets[0].diameterMeters / 2,
-        materialThicknessMeters: PipePresets[0].materialThicknessMeters,
+        materialThicknessMM: PipePresets[0].materialThicknessMM,
         uuid: crypto.randomUUID(),
     })
 }
 
 // delete pipe at index
 function removePipe(index: number) {
-    pipes.value.splice(index, 1)
+    system.value.pipes.splice(index, 1)
 }
 
 function reset() {
-    pipes.value = []
-    manhole.value = {...DEFAULT_MANHOLE}
+    system.value.pipes = []
+    system.value.manhole = {...DEFAULT_MANHOLE}
     addPipe()
     update()
 }
 
 function findMinManholeSize(): ManholePreset | null {
     for (const preset of ManholePresets) {
-        const cD = new CollisionDetection({...manhole.value, diameterMeters: preset.diameterMeters}, pipes.value)
+        const cD = new CollisionDetection({...system.value, manhole: {...system.value.manhole, diameterMeters: preset.diameterMeters}})
         if (cD.collisions.length == 0) {
             return preset
         }
@@ -53,17 +54,20 @@ function findMinManholeSize(): ManholePreset | null {
 }
 
 function update() {
+    system.value.manholeVisibleSectionHeight = getManholeVisibleSectionHeightMeters(system.value)
+    system.value.manholeVisibleSectionBottomElevation = getManholeVisibleSectionBottomMeters(system.value)
+
     manholeCanvas.value?.clearCanvas()
-    manholeCanvas.value?.render(manhole.value, pipes.value, new CollisionDetection(manhole.value, pipes.value))
+    manholeCanvas.value?.render(system.value, new CollisionDetection(system.value))
     minManholePreset.value = findMinManholeSize()
 }
 
 /** watch all state, and rerender the canvas on any changes */
-watch(() => [pipes.value, manhole.value] as const, update, { deep: true })
+watch(system, update, { deep: true })
 
 onMounted(() => {
     manholeCanvas.value = new ManholeCanvas("#canvas")
-    if (pipes.value.length == 0)
+    if (system.value.pipes.length == 0)
         addPipe()
     update()
 })
@@ -78,9 +82,9 @@ onMounted(() => {
     <canvas ref="canvas" id="canvas"></canvas>
     <h2>Minimum manhole size for structure: {{ minManholePreset?.name }}</h2>
     <h2>Manhole Settings</h2>
-    <ManholeConfItem v-model="manhole"></ManholeConfItem>
+    <ManholeConfItem v-model="system.manhole"></ManholeConfItem>
     <div id="pipe-confs">
-        <PipeConfItem v-for="_conf, index in pipes" :key="index" v-model="pipes[index]" :index @remove="removePipe(index)"/>
+        <PipeConfItem v-for="_conf, index in system.pipes" :key="index" v-model="system.pipes[index]" :index @remove="removePipe(index)"/>
         <button class="box-btn" @click="addPipe">Add Pipe</button>
     </div>
     <button id="reset-btn" class="box-btn" @click="reset">RESET</button>

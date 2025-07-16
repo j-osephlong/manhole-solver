@@ -15,7 +15,7 @@ watch(() => model.value.presetName, (name) => {
     const preset = PipePresets.find((preset) => preset.name == name)
     if (preset) {
         model.value.radiusMeters = preset.diameterMeters / 2
-        model.value.materialThicknessMeters = preset.materialThicknessMeters
+        model.value.materialThicknessMM = preset.materialThicknessMM
     }
 })
 
@@ -30,20 +30,20 @@ watch(() => model.value.presetName, (name) => {
             </select>
         </div>
         <div class="setting">
-            <label>Angle</label>
+            <label>Angle (degrees)</label>
             <input type="number" v-model="model.xDegrees" placeholder="0° - 360°" max="360" min="0" step="3">
         </div>
         <div class="setting">
-            <label>Height</label>
-            <input type="number" v-model="model.heightMeters" placeholder="Meters" step=".25">
+            <label>Invert Elevation (m)</label>
+            <input type="number" v-model="model.invertElevationMeters" placeholder="Meters" step=".25">
         </div>
         <div class="setting">
-            <label>Radius</label>
+            <label>Radius (m)</label>
             <input type="number" v-model="model.radiusMeters" placeholder="Meters" step=".1">
         </div>
         <div class="setting">
-            <label>Material Thickness</label>
-            <input type="number" v-model="model.materialThicknessMeters" placeholder="Meters" step=".1">
+            <label>Material Thickness (mm)</label>
+            <input type="number" v-model="model.materialThicknessMM" placeholder="Meters" step="5">
         </div>
         <button class="box-btn" @click="emit('remove')">Remove</button>
     </div>

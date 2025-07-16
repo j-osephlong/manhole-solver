@@ -1,5 +1,5 @@
 import { MANHOLE_WIDTH_DEGREES } from "./constants";
-import type { ManholeConf, PipeConf } from "./types";
+import type { ManholeConf, PipeConf, System } from "./types";
 
 const LOG_TAG = "[collision.ts]" as const;
 
@@ -22,12 +22,12 @@ export class CollisionDetection {
     /** list of all collisions in the system, by pipe uuid mapped to a list of colliding pipe uuids */
     collisions: [PipeConf, PipeConf][]
 
-    constructor(manhole: ManholeConf, pipes: PipeConf[]) {
+    constructor(system: System) {
         this.cells = new Map()
         this.collisions = []
 
-        this.manhole = manhole
-        this.pipes = pipes
+        this.manhole = system.manhole
+        this.pipes = system.pipes
         this.cellSize = this.chooseCellSize()
         this.cells = this.buildCells()
         this.collisions = this.getCollisions()
@@ -39,7 +39,7 @@ export class CollisionDetection {
         }
         const pipeXMeters = this.manhole.diameterMeters / MANHOLE_WIDTH_DEGREES * conf.xDegrees
         const cellX = Math.floor(pipeXMeters / this.cellSize)
-        const cellY = Math.floor((conf.heightMeters + conf.radiusMeters) / this.cellSize)
+        const cellY = Math.floor((conf.invertElevationMeters + conf.radiusMeters) / this.cellSize)
         return `${cellX}:${cellY}`
     }
 
@@ -58,7 +58,7 @@ export class CollisionDetection {
         if (!this.manhole || !this.pipes) {
             throw new Error("Not initialized.")
         }
-        return this.manhole.minSpacingMeters + Math.max(...this.pipes.map(p => p.radiusMeters + p.materialThicknessMeters)) * 2
+        return this.manhole.minSpacingMeters + Math.max(...this.pipes.map(p => p.radiusMeters + p.materialThicknessMM / 1000)) * 2
     }
 
     buildCells() {
@@ -80,11 +80,11 @@ export class CollisionDetection {
             throw new Error("Not initialized.")
         }
         const pipe1XCenterMeters = this.manhole.diameterMeters / MANHOLE_WIDTH_DEGREES * (conf1.xDegrees)
-        const pipe1TotalRadius = conf1.radiusMeters + conf1.materialThicknessMeters
+        const pipe1TotalRadius = conf1.radiusMeters + conf1.materialThicknessMM / 1000
         const pipe2XCenterMeters = this.manhole.diameterMeters / MANHOLE_WIDTH_DEGREES * (conf2.xDegrees)
-        const pipe2TotalRadius = conf2.radiusMeters + conf2.materialThicknessMeters
-        const distance1 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters))** 2 + ((conf2.heightMeters + conf2.radiusMeters) - (conf1.heightMeters + conf1.radiusMeters)) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
-        const distance2 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters - this.manhole.diameterMeters))** 2 + ((conf2.heightMeters + conf2.radiusMeters) - (conf1.heightMeters + conf1.radiusMeters)) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
+        const pipe2TotalRadius = conf2.radiusMeters + conf2.materialThicknessMM / 1000
+        const distance1 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters))** 2 + ((conf2.invertElevationMeters + conf2.radiusMeters) - (conf1.invertElevationMeters + conf1.radiusMeters)) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
+        const distance2 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters - this.manhole.diameterMeters))** 2 + ((conf2.invertElevationMeters + conf2.radiusMeters) - (conf1.invertElevationMeters + conf1.radiusMeters)) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
 
         return Math.min(distance1, distance2)
     }

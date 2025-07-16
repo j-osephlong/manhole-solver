@@ -1,6 +1,6 @@
 
 export type ManholeConf = {
-    heightMeters: number,
+    rimElevationMeters: number,
     diameterMeters: number,
     minSpacingMeters: number,
 }
@@ -8,8 +8,8 @@ export type ManholeConf = {
 export type PipeConf = {
     radiusMeters: number,
     xDegrees: number,
-    heightMeters: number,
-    materialThicknessMeters: number,
+    invertElevationMeters: number,
+    materialThicknessMM: number,
     presetName: string,
     uuid: string,
 }
@@ -17,10 +17,30 @@ export type PipeConf = {
 export type PipePreset = {
     name: string,
     diameterMeters: number,
-    materialThicknessMeters: number,
+    materialThicknessMM: number,
 }
 
 export type ManholePreset = {
     name: string,
     diameterMeters: number,
+}
+
+export type System = {
+    manhole: ManholeConf,
+    pipes: PipeConf[],
+    manholeVisibleSectionHeight: number,
+    manholeVisibleSectionBottomElevation: number,
+}
+
+export function getManholeVisibleSectionHeightMeters(system: System) {
+    const lowestPipeElevation = Math.min(...system.pipes.map(p => p.invertElevationMeters)) || 0   
+    return Math.max(system.manhole.rimElevationMeters - lowestPipeElevation, 1)
+}
+
+export function getManholeVisibleSectionBottomMeters(system: System) { 
+    return system.manhole.rimElevationMeters - getManholeVisibleSectionHeightMeters(system)
+}
+
+export function getPipeCenterElevation(pipe: PipeConf) {
+    return pipe.invertElevationMeters + pipe.radiusMeters
 }

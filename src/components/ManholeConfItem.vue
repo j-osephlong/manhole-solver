@@ -8,18 +8,18 @@ const model = defineModel<ManholeConf>({required: true})
 <template>
     <div class="conf-container">
         <div class="setting">
-            <label>Diameter</label>
+            <label>Diameter (mm/in)</label>
             <select v-model="model.diameterMeters">
                 <option v-for="preset in ManholePresets" :key="preset.name" :value="preset.diameterMeters">{{ preset.name }}</option>
             </select>
             {{ model.diameterMeters }}
         </div>
         <div class="setting">
-            <label>Structure Height</label>
-            <input type="number" v-model="model.heightMeters" placeholder="Meters" step=".25">
+            <label>Rim Elevation (m)</label>
+            <input type="number" v-model="model.rimElevationMeters" placeholder="Meters" step=".25">
         </div>
         <div class="setting">
-            <label>Minimum Pipe Spacing</label>
+            <label>Minimum Pipe Spacing (m)</label>
             <input type="number" v-model="model.minSpacingMeters" placeholder="Meters" step=".1">
         </div>
     </div>

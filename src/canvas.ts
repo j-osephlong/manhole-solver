@@ -1,6 +1,6 @@
 import type { CollisionDetection } from "./collision"
 import { MANHOLE_WIDTH_DEGREES } from "./constants"
-import type { ManholeConf, PipeConf } from "./types"
+import { getManholeVisibleSectionHeightMeters, getPipeCenterElevation, type PipeConf, type System } from "./types"
 
 const LOG_TAG = "[canvas.ts]" as const;
 export const MANHOLE_CANVAS_PERCENT = 0.8
@@ -62,30 +62,44 @@ export class ManholeCanvas {
         return (this.manholeWidthPx! / MANHOLE_WIDTH_DEGREES) * deg
     }
 
-    metersXToPx(metersX: number, manholeDiameterMeters: number) {
-        return (this.manholeWidthPx!/ manholeDiameterMeters) * metersX
+    metersToPx(metersX: number, system: System) {
+        return (this.manholeWidthPx!/ system.manhole.diameterMeters) * (metersX) 
     }
 
-    drawManhole(manholeConf: ManholeConf) {
+    metersYToPx(metersX: number, system: System) {
+        return (this.manholeWidthPx!/ system.manhole.diameterMeters) * (metersX - system.manholeVisibleSectionBottomElevation) 
+    }
+
+    drawManhole(system: System) {
+        const manholeHeightMeters = getManholeVisibleSectionHeightMeters(system)
+        console.debug(LOG_TAG, manholeHeightMeters);
+        
         // draw manhole laid out from 0degrees to 360degrees
         this.context.beginPath();
         this.context.rect(this.manholeTopLeft[0], this.manholeTopLeft[1], this.manholeBottomRight[0] - this.manholeTopLeft[0], this.manholeBottomRight[1] - this.manholeTopLeft[1]);
         this.context.lineWidth = 5;
         this.context.stroke();
-
+        // draw x axis
         this.context.fillText('0°', this.manholeTopLeft[0], this.manholeTopLeft[1] - 10 - 7);
         this.context.fillText('360°', this.manholeBottomRight[0], this.manholeTopLeft[1] - 10 - 7);
-        this.context.fillText(`← ${manholeConf.diameterMeters} meters →`, this.manholeTopLeft[0] + this.manholeWidthPx! / 2, this.manholeTopLeft[1] - 10 - 7);
+        this.context.fillText(`← ${system.manhole.diameterMeters} meters →`, this.manholeTopLeft[0] + this.manholeWidthPx! / 2, this.manholeTopLeft[1] - 10 - 7);
+        // draw y axis
+        const topXAxisText = `${system.manhole.rimElevationMeters.toFixed(2)} meters`
+        const bottomXAxisText = `${(system.manholeVisibleSectionBottomElevation).toFixed(2)} meters`
+        this.context.fillText(topXAxisText, this.manholeTopLeft[0] - 10 - this.context.measureText(topXAxisText).width / 2, this.manholeTopLeft[1]);
+        this.context.fillText(bottomXAxisText, this.manholeTopLeft[0] - 10- this.context.measureText(bottomXAxisText).width / 2, this.manholeBottomRight[1]);
+        
     }
 
     drawPipeCutout(o: {
-        conf: PipeConf, manholeConf: ManholeConf, index: number
+        pipe: PipeConf, system: System, index: number
     }) {
-        const radiusPx = this.metersXToPx(o.conf.radiusMeters, o.manholeConf.diameterMeters)
-        const materialThicknessPx = this.metersXToPx(o.conf.materialThicknessMeters, o.manholeConf.diameterMeters)
-        const spacingPx = this.metersXToPx(o.manholeConf.minSpacingMeters, o.manholeConf.diameterMeters)
-        const xPx = this.manholeTopLeft[0] + this.degToPx(o.conf.xDegrees)
-        const yPx = this.manholeBottomRight[1] - this.metersXToPx(o.conf.heightMeters + o.conf.radiusMeters, o.manholeConf.diameterMeters)
+        const radiusPx = this.metersToPx(o.pipe.radiusMeters, o.system)
+        const materialThicknessPx = this.metersToPx(o.pipe.materialThicknessMM / 1000, o.system)
+        const spacingPx = this.metersToPx(o.system.manhole.minSpacingMeters, o.system)
+        const xPx = this.manholeTopLeft[0] + this.degToPx(o.pipe.xDegrees)
+        const yPx = this.manholeBottomRight[1] - this.metersYToPx(getPipeCenterElevation(o.pipe), o.system)
+        const invertYPx = yPx + radiusPx
 
         // internal circle of pipe
         this.context.beginPath();
@@ -121,22 +135,45 @@ export class ManholeCanvas {
         }
         // draw a dotted line through the manhole and center of pipe
         this.context.beginPath();
-        this.context.lineTo(xPx, this.manholeTopLeft[1] - 10);
-        this.context.lineTo(xPx, this.manholeBottomRight[1] + 10);
+        this.context.lineTo(xPx, this.manholeTopLeft[1] - 40);
+        this.context.lineTo(xPx, this.manholeBottomRight[1] + 40);
         this.context.lineWidth = 2;
         this.context.setLineDash([8,8]);
         this.context.stroke();
         this.context.setLineDash([0]);
         // write label for manhole
-        this.context.fillText(`Pipe ${o.index + 1}`, xPx, this.manholeBottomRight[1] + 10 + 7);
-        // this.context.fillText(cellhash(o.conf), xPx, this.manholeBottomRight[1] + 10 + 31);
+        this.context.fillText(`Pipe ${o.index + 1}`, xPx, this.manholeBottomRight[1] + 40 + 7);
+        // draw a dotted line veritcally to show measure of invert to rim (measure down)
+        if (Math.abs(invertYPx - this.manholeBottomRight[1]) > 10) {
+            const measureDownMeters = o.system.manhole.rimElevationMeters - o.pipe.invertElevationMeters
+            const lineXPx = xPx - radiusPx - materialThicknessPx - 10
+            const lineTopYPx = this.manholeTopLeft[1] + 10
+            const measureDownText = `${measureDownMeters.toFixed(2)}m`
+            const textWidth = this.context.measureText(measureDownText).width
+            this.context.beginPath();
+            this.context.lineTo(lineXPx, lineTopYPx);
+            this.context.lineTo(lineXPx, invertYPx);
+            this.context.lineWidth = 2;
+            this.context.setLineDash([8,8]);
+            this.context.stroke();
+            this.context.setLineDash([0]);
+            this.context.beginPath();
+            this.context.lineTo(lineXPx - 10, invertYPx);
+            this.context.lineTo(lineXPx + 10, invertYPx);
+            this.context.stroke();
+            this.context.beginPath();
+            this.context.lineTo(lineXPx - 10, lineTopYPx);
+            this.context.lineTo(lineXPx + 10, lineTopYPx);
+            this.context.stroke();
+            this.context.fillText(measureDownText, lineXPx - textWidth + 10, (invertYPx + lineTopYPx) / 2);
+        }
     }
 
-    drawCollision(collision: [PipeConf, PipeConf], manholeConf: ManholeConf, collisionDetection: CollisionDetection) {
+    drawCollision(collision: [PipeConf, PipeConf], system: System, collisionDetection: CollisionDetection) {
         const xPx1 = this.manholeTopLeft[0] + this.degToPx(collision[0].xDegrees)
-        const yPx1 = this.manholeBottomRight[1] - this.metersXToPx(collision[0].heightMeters + collision[0].radiusMeters, manholeConf.diameterMeters)
+        const yPx1 = this.manholeBottomRight[1] - this.metersYToPx(getPipeCenterElevation(collision[0]), system)
         const xPx2 = this.manholeTopLeft[0] + this.degToPx(collision[1].xDegrees)
-        const yPx2 = this.manholeBottomRight[1] - this.metersXToPx(collision[1].heightMeters + collision[1].radiusMeters, manholeConf.diameterMeters)
+        const yPx2 = this.manholeBottomRight[1] - this.metersYToPx(getPipeCenterElevation(collision[1]), system)
         const xBtwnPx = (xPx1 + xPx2) / 2
         const yBtwnPx = (yPx1 + yPx2) / 2
         const dstBtwn = collisionDetection.distanceBetween(collision[0], collision[1])
@@ -154,28 +191,32 @@ export class ManholeCanvas {
         this.context.fillStyle = this.canvasPenColorHex
     }
 
-    render(manholeConf: ManholeConf, pipeConfs: PipeConf[], collisionDetection: CollisionDetection) {
+    render(system: System, collisionDetection: CollisionDetection) {
         // We want either the height or width of the manhole to be 80% of that direction of the canvas
+        const manholeHeightMeters = getManholeVisibleSectionHeightMeters(system)
         this.manholeWidthPx = this.canvasElm.width * MANHOLE_CANVAS_PERCENT
-        this.manholeHeightPx = (manholeConf.heightMeters / manholeConf.diameterMeters) * this.manholeWidthPx
+        this.manholeHeightPx = (manholeHeightMeters / system.manhole.diameterMeters) * this.manholeWidthPx
         if (this.manholeHeightPx > this.canvasElm.height * MANHOLE_CANVAS_PERCENT) {
             this.manholeHeightPx = this.canvasElm.height * MANHOLE_CANVAS_PERCENT
-            this.manholeWidthPx = (manholeConf.diameterMeters / manholeConf.heightMeters) * this.manholeHeightPx
+            this.manholeWidthPx = (system.manhole.diameterMeters / manholeHeightMeters) * this.manholeHeightPx
         }
+
+        console.debug(LOG_TAG, manholeHeightMeters, this.manholeHeightPx);
+        
         
         // setup manhole coords 
         this.manholeTopLeft = [this.centerX - (this.manholeWidthPx / 2), this.centerY - (this.manholeHeightPx / 2)] as const
         this.manholeBottomRight = [this.centerX + (this.manholeWidthPx / 2), this.centerY + (this.manholeHeightPx / 2)] as const
         
         // draw manhole
-        this.drawManhole(manholeConf)
+        this.drawManhole(system)
         
         // draw pipes
         let i = 0;
-        for (const conf of pipeConfs) {
+        for (const pipe of system.pipes) {
             this.drawPipeCutout({
-                conf,
-                manholeConf,
+                pipe,
+                system,
                 index: i,
             })
             i++
@@ -183,7 +224,7 @@ export class ManholeCanvas {
         
         // draw collision warnings
         for (const collision of collisionDetection.collisions) {
-            this.drawCollision(collision, manholeConf, collisionDetection)
+            this.drawCollision(collision, system, collisionDetection)
         }
 
         console.debug(LOG_TAG, "Rendered canvas.");
