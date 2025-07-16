@@ -2,6 +2,7 @@ import type { CollisionDetection } from "./collision"
 import { MANHOLE_WIDTH_DEGREES } from "./constants"
 import type { ManholeConf, PipeConf } from "./types"
 
+const LOG_TAG = "[canvas.ts]" as const;
 export const MANHOLE_CANVAS_PERCENT = 0.8
 
 export class ManholeCanvas {
@@ -84,7 +85,7 @@ export class ManholeCanvas {
         const materialThicknessPx = this.metersXToPx(o.conf.materialThicknessMeters, o.manholeConf.diameterMeters)
         const spacingPx = this.metersXToPx(o.manholeConf.minSpacingMeters, o.manholeConf.diameterMeters)
         const xPx = this.manholeTopLeft[0] + this.degToPx(o.conf.xDegrees)
-        const yPx = this.manholeBottomRight[1] - this.metersXToPx(o.conf.centerYMeters, o.manholeConf.diameterMeters)
+        const yPx = this.manholeBottomRight[1] - this.metersXToPx(o.conf.heightMeters + o.conf.radiusMeters, o.manholeConf.diameterMeters)
 
         // internal circle of pipe
         this.context.beginPath();
@@ -133,9 +134,9 @@ export class ManholeCanvas {
 
     drawCollision(collision: [PipeConf, PipeConf], manholeConf: ManholeConf, collisionDetection: CollisionDetection) {
         const xPx1 = this.manholeTopLeft[0] + this.degToPx(collision[0].xDegrees)
-        const yPx1 = this.manholeBottomRight[1] - this.metersXToPx(collision[0].centerYMeters, manholeConf.diameterMeters)
+        const yPx1 = this.manholeBottomRight[1] - this.metersXToPx(collision[0].heightMeters + collision[0].radiusMeters, manholeConf.diameterMeters)
         const xPx2 = this.manholeTopLeft[0] + this.degToPx(collision[1].xDegrees)
-        const yPx2 = this.manholeBottomRight[1] - this.metersXToPx(collision[1].centerYMeters, manholeConf.diameterMeters)
+        const yPx2 = this.manholeBottomRight[1] - this.metersXToPx(collision[1].heightMeters + collision[1].radiusMeters, manholeConf.diameterMeters)
         const xBtwnPx = (xPx1 + xPx2) / 2
         const yBtwnPx = (yPx1 + yPx2) / 2
         const dstBtwn = collisionDetection.distanceBetween(collision[0], collision[1])
@@ -155,21 +156,20 @@ export class ManholeCanvas {
 
     render(manholeConf: ManholeConf, pipeConfs: PipeConf[], collisionDetection: CollisionDetection) {
         // We want either the height or width of the manhole to be 80% of that direction of the canvas
-
         this.manholeWidthPx = this.canvasElm.width * MANHOLE_CANVAS_PERCENT
         this.manholeHeightPx = (manholeConf.heightMeters / manholeConf.diameterMeters) * this.manholeWidthPx
         if (this.manholeHeightPx > this.canvasElm.height * MANHOLE_CANVAS_PERCENT) {
             this.manholeHeightPx = this.canvasElm.height * MANHOLE_CANVAS_PERCENT
             this.manholeWidthPx = (manholeConf.diameterMeters / manholeConf.heightMeters) * this.manholeHeightPx
         }
-
+        
         // setup manhole coords 
         this.manholeTopLeft = [this.centerX - (this.manholeWidthPx / 2), this.centerY - (this.manholeHeightPx / 2)] as const
         this.manholeBottomRight = [this.centerX + (this.manholeWidthPx / 2), this.centerY + (this.manholeHeightPx / 2)] as const
-
+        
         // draw manhole
         this.drawManhole(manholeConf)
-
+        
         // draw pipes
         let i = 0;
         for (const conf of pipeConfs) {
@@ -180,11 +180,13 @@ export class ManholeCanvas {
             })
             i++
         }
-
+        
         // draw collision warnings
         for (const collision of collisionDetection.collisions) {
             this.drawCollision(collision, manholeConf, collisionDetection)
         }
+
+        console.debug(LOG_TAG, "Rendered canvas.");
     }
 
     clearCanvas() {

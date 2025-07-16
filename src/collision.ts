@@ -39,7 +39,7 @@ export class CollisionDetection {
         }
         const pipeXMeters = this.manhole.diameterMeters / MANHOLE_WIDTH_DEGREES * conf.xDegrees
         const cellX = Math.floor(pipeXMeters / this.cellSize)
-        const cellY = Math.floor(conf.centerYMeters / this.cellSize)
+        const cellY = Math.floor((conf.heightMeters + conf.radiusMeters) / this.cellSize)
         return `${cellX}:${cellY}`
     }
 
@@ -83,8 +83,8 @@ export class CollisionDetection {
         const pipe1TotalRadius = conf1.radiusMeters + conf1.materialThicknessMeters
         const pipe2XCenterMeters = this.manhole.diameterMeters / MANHOLE_WIDTH_DEGREES * (conf2.xDegrees)
         const pipe2TotalRadius = conf2.radiusMeters + conf2.materialThicknessMeters
-        const distance1 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters))** 2 + (conf2.centerYMeters - conf1.centerYMeters) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
-        const distance2 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters - this.manhole.diameterMeters))** 2 + (conf2.centerYMeters - conf1.centerYMeters) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
+        const distance1 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters))** 2 + ((conf2.heightMeters + conf2.radiusMeters) - (conf1.heightMeters + conf1.radiusMeters)) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
+        const distance2 = Math.sqrt(((pipe2XCenterMeters - pipe1XCenterMeters - this.manhole.diameterMeters))** 2 + ((conf2.heightMeters + conf2.radiusMeters) - (conf1.heightMeters + conf1.radiusMeters)) ** 2) - (pipe1TotalRadius + pipe2TotalRadius)
 
         return Math.min(distance1, distance2)
     }
@@ -142,8 +142,6 @@ export class CollisionDetection {
                 }
             }
         }
-        console.debug(LOG_TAG, hash1, possibleCells);
-        
         return collisions
     }
 

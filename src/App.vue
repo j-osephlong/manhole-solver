@@ -27,9 +27,6 @@ function addPipe() {
         radiusMeters: PipePresets[0].diameterMeters / 2,
         materialThicknessMeters: PipePresets[0].materialThicknessMeters,
         uuid: crypto.randomUUID(),
-        get centerYMeters() {
-            return this.heightMeters + this.radiusMeters
-        }
     })
 }
 
