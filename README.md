@@ -1,6 +1,10 @@
 # manhole-solver
 
-This template should help get you started developing with Vue 3 in Vite.
+Web app that helps determine the minimum manhole size needed given a manhole and the pipes intersecting with it.
+
+Displays an unwrapped view of the manhole (sliced lengthwise).
+
+![alt Demo image of tool.](screenshots/demo-img.png "Screenshot")
 
 ## Recommended IDE Setup
 
