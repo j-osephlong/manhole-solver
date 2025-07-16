@@ -6,6 +6,10 @@ Displays an unwrapped view of the manhole (sliced lengthwise).
 
 ![alt Demo image of tool.](screenshots/demo-img.png "Screenshot")
 
+## Demo
+
+You can use the tool [here](https://j-osephlong.github.io/manhole-solver).
+
 ## Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
