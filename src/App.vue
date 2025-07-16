@@ -88,6 +88,11 @@ onMounted(() => {
         <button class="box-btn" @click="addPipe">Add Pipe</button>
     </div>
     <button id="reset-btn" class="box-btn" @click="reset">RESET</button>
+    <h4 style="margin-top: 2rem;">Usage Terms</h4>
+    <p>
+        This software is made available in the hope that it will be useful, but without any warranty. 
+        No author or distributor accepts responsibility to anyone for the consequences of using it or for whether it serves any particular purpose or works at all.
+    </p>
   </main>
 </template>
 

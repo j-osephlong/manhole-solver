@@ -10,6 +10,10 @@ Displays an unwrapped view of the manhole (sliced lengthwise).
 
 You can use the tool [here](https://j-osephlong.github.io/manhole-solver).
 
+## Usage Terms
+
+This software is made available in the hope that it will be useful, but without any warranty. No author or distributor accepts responsibility to anyone for the consequences of using it or for whether it serves any particular purpose or works at all.
+
 ## Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
