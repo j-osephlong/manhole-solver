@@ -46,5 +46,5 @@ export function getPipeCenterElevation(pipe: PipeConf) {
 }
 
 export function circumference(r: number) {
-    return (2 * Math.PI * r) ** 2
+    return (2 * Math.PI * r)
 }
