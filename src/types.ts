@@ -12,7 +12,6 @@ export type PipeConf = {
     materialThicknessMeters: number,
     presetName: string,
     uuid: string,
-    get centerYMeters(): number,
 }
 
 export type PipePreset = {
