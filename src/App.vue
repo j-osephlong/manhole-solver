@@ -56,9 +56,9 @@ function findMinManholeSize(): ManholePreset | null {
 function update() {
     system.value.manholeVisibleSectionHeight = getManholeVisibleSectionHeightMeters(system.value)
     system.value.manholeVisibleSectionBottomElevation = getManholeVisibleSectionBottomMeters(system.value)
-
     manholeCanvas.value?.clearCanvas()
-    manholeCanvas.value?.render(system.value, new CollisionDetection(system.value))
+    const c = new CollisionDetection(system.value)
+    manholeCanvas.value?.render(system.value, c)
     minManholePreset.value = findMinManholeSize()
 }
 

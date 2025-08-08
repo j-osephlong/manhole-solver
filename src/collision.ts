@@ -56,7 +56,7 @@ export class CollisionDetection {
         if (!this.manhole || !this.pipes) {
             throw new Error("Not initialized.")
         }
-        return this.manhole.minSpacingMeters + Math.max(...this.pipes.map(p => p.radiusMeters + p.materialThicknessMM / 1000)) * 2
+        return (this.manhole.minSpacingMeters + Math.max(...this.pipes.map(p => p.radiusMeters + p.materialThicknessMM / 1000))) * 2
     }
 
     buildCells() {
@@ -117,8 +117,14 @@ export class CollisionDetection {
         const possibleHashes = []
         // iterate through possible cells
         for (const cell of possibleCellsComponents) {
-            if (cell[0] < 0) cell[0] += this.numCellsX - 1
-            if (cell[0] > this.numCellsX - 1) cell[0] -= this.numCellsX - 1
+            if (cell[0] < 0) {
+                cell[0] += this.numCellsX
+                possibleHashes.push(this.componentsToHash([cell[0] - 1, cell[1]]))
+            }
+            if (cell[0] > this.numCellsX) {
+                cell[0] -= this.numCellsX
+                possibleHashes.push(this.componentsToHash([cell[0] + 1, cell[1]]))
+            }
             possibleHashes.push(this.componentsToHash(cell))
         }
         return possibleHashes
